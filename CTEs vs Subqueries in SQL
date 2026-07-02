@@ -1,0 +1,169 @@
+# 📘 Common Table Expression (CTE)
+
+## 📌 What is a CTE?
+
+A **Common Table Expression (CTE)** is a temporary named result set that exists only during the execution of a single SQL statement. It helps simplify complex SQL queries by breaking them into logical, readable steps.
+
+---
+
+## 🔹 Syntax
+
+```sql
+WITH CTE_Name AS
+(
+    SELECT ...
+)
+SELECT *
+FROM CTE_Name;
+```
+
+---
+
+# 💡 Why Use CTEs?
+
+- Improves query readability.
+- Makes complex SQL easier to understand.
+- Separates business logic into logical steps.
+- Easier to debug and maintain.
+- Can be referenced by subsequent CTEs.
+- Supports recursive queries for hierarchical data.
+
+---
+
+# 🏢 Real-Time Business Scenario (SAP Business One)
+
+### Requirement
+
+The Sales Director wants a report showing customers who generated **more than ₹1,000,000** in sales during the current year.
+
+### Report Should Include
+
+- Customer Code
+- Customer Name
+- Number of Invoices
+- Total Sales
+- Average Invoice Value
+
+### Business Rules
+
+- Consider only Customers (`CardType = 'C'`)
+- Exclude Cancelled Invoices
+- Use a CTE
+- Aggregate data inside the CTE
+- Filter Total Sales in the final query
+- Display highest sales first
+
+---
+
+# 💻 SQL Solution
+
+```sql
+WITH "CURRENT_YEAR_SALES" AS
+(
+    SELECT
+        COUNT(*) AS "No Of Invoice",
+        A."CardCode",
+        A."CardName",
+        SUM(A."DocTotal") AS "Total Sales",
+        AVG(A."DocTotal") AS "AVG Sales"
+    FROM OINV A
+    INNER JOIN OCRD B
+        ON A."CardCode" = B."CardCode"
+    WHERE
+        B."CardType" = 'C'
+        AND A."CANCELED" <> 'Y'
+        AND YEAR(A."DocDate") = YEAR(CURRENT_DATE)
+    GROUP BY
+        A."CardCode",
+        A."CardName"
+)
+
+SELECT
+    "CardCode" AS "Customer Code",
+    "CardName" AS "Customer Name",
+    "No Of Invoice" AS "Number Of Invoices",
+    "Total Sales",
+    "AVG Sales" AS "Average Invoice Sales"
+FROM "CURRENT_YEAR_SALES"
+WHERE "Total Sales" > 1000000
+ORDER BY "Total Sales" DESC;
+```
+
+---
+
+# 🔄 CTE Execution Flow
+
+```
+
+SAP B1 Tables
+│
+├── OINV (A/R Invoice)
+└── OCRD (Business Partner)
+│
+▼
+Filter Current Year + Active Customers
+│
+▼
+Aggregate Sales (CTE)
+│
+├── Invoice Count
+├── Total Sales
+└── Average Invoice Value
+│
+▼
+Final Query
+│
+├── Filter Total Sales > ₹1,000,000
+└── Sort by Highest Sales
+
+```
+
+---
+
+# 📊 CTE vs Subquery
+
+| Feature | CTE | Subquery |
+|---------|-----|----------|
+| Readability | ✅ Excellent | ❌ Moderate |
+| Debugging | ✅ Easy | ❌ Difficult |
+| Multiple Steps | ✅ Yes | ❌ No |
+| Reusable in Same Query | ✅ Yes | ❌ No |
+| Recursive Support | ✅ Yes | ❌ No |
+| Performance | Usually Similar | Usually Similar |
+
+---
+
+# ✅ Best Practices
+
+- Use meaningful CTE names.
+- Keep each CTE focused on one business calculation.
+- Perform aggregations inside the CTE.
+- Apply final filtering in the outer query.
+- Avoid unnecessary GROUP BY columns.
+- Use `INNER JOIN` when matching records are mandatory.
+
+---
+
+# 🎯 Interview Question
+
+### Why use a CTE instead of a subquery?
+
+**Answer:**
+
+> A CTE improves readability and maintainability by breaking complex SQL into logical steps. It allows intermediate business calculations to be performed once and reused within the same query. CTEs are also the only option for writing recursive queries.
+
+---
+
+# 🚀 Key Takeaways
+
+✔ Temporary result set available only during query execution.
+
+✔ Declared using the `WITH` keyword.
+
+✔ Makes SQL cleaner and easier to maintain.
+
+✔ Ideal for reports, dashboards, KPI calculations, and complex business logic.
+
+✔ Commonly used with Window Functions (`ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`).
+
+✔ Widely used in ERP reporting (SAP Business One, Oracle ERP, Microsoft Dynamics, etc.).
