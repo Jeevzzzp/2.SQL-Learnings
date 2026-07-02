@@ -1,0 +1,206 @@
+# Module 4 – SQL Subqueries
+
+## 📖 Overview
+
+A **Subquery** is a query written inside another SQL query. The inner query executes first, and its result is used by the outer query.
+
+```sql
+SELECT ...
+FROM Table
+WHERE Column = (
+    SELECT ...
+);
+```
+
+---
+
+# Types of Subqueries
+
+## 1. Scalar Subquery
+
+### Definition
+Returns **one row and one column (a single value)**.
+
+### Common Uses
+- `WHERE`
+- `SELECT`
+- `HAVING`
+- `CASE`
+
+### Business Example
+**Finance**
+
+Find invoices greater than the company's average invoice amount.
+
+```sql
+SELECT *
+FROM OINV
+WHERE DocTotal >
+(
+    SELECT AVG(DocTotal)
+    FROM OINV
+);
+```
+
+### Key Points
+
+- Returns only one value.
+- Commonly used with `AVG()`, `SUM()`, `MIN()`, `MAX()`.
+- Best for company-wide comparisons.
+
+---
+
+## 2. Multiple Row Subquery
+
+Returns **multiple rows**.
+
+### Operators
+
+### IN
+
+Checks whether a value exists in a list returned by the subquery.
+
+**Business Example**
+
+Find invoices of Premium Customers.
+
+```sql
+SELECT *
+FROM OINV
+WHERE CardCode IN
+(
+    SELECT CardCode
+    FROM OCRD
+    WHERE GroupCode = 101
+);
+```
+
+---
+
+### ANY
+
+Returns TRUE if **at least one comparison** is TRUE.
+
+Example
+
+```sql
+WHERE DocTotal > ANY (...)
+```
+
+Think of it as:
+
+> Greater than **at least one** value.
+
+---
+
+### ALL
+
+Returns TRUE only if **every comparison** is TRUE.
+
+Example
+
+```sql
+WHERE DocTotal > ALL (...)
+```
+
+Think of it as:
+
+> Greater than **every** value.
+
+---
+
+# Comparison
+
+| Operator | Purpose |
+|----------|---------|
+| `IN` | Match one of many values |
+| `ANY` | Compare against at least one value |
+| `ALL` | Compare against every value |
+
+---
+
+## 3. Correlated Subquery
+
+### Definition
+
+A Correlated Subquery depends on the outer query and executes **once for each row**.
+
+Unlike a Scalar Subquery, its result changes based on the current row.
+
+---
+
+### Business Logic
+
+Ask yourself:
+
+> **What is the comparison key?**
+
+Examples:
+
+- Department
+- Customer Group
+- Region
+- Category
+- Warehouse
+
+The comparison key determines which records should be used for comparison.
+
+---
+
+### Business Example
+
+Find employees earning more than the average salary of **their own department**.
+
+Department is the comparison key.
+
+```
+Employee
+   ↓
+Department
+   ↓
+Find Department Average
+   ↓
+Compare Salary
+```
+
+---
+
+## Scalar vs Correlated Subquery
+
+| Feature | Scalar | Correlated |
+|----------|---------|------------|
+| Execution | Once | Once per row |
+| Returns | One value | Depends on current row |
+| Uses Outer Query | ❌ No | ✅ Yes |
+| Performance | Faster | Usually slower |
+| Best For | Company-wide comparison | Group-wise comparison |
+
+---
+
+# Real SAP Business One Use Cases
+
+### Finance
+- Invoices above company average.
+- Customers with outstanding balances.
+
+### Sales
+- Premium customer invoices.
+- Customers above group average sales.
+
+### Inventory
+- Products above average stock.
+- Items in selected item groups.
+
+### HR
+- Employees above department average salary.
+
+---
+
+# Key Takeaways
+
+- ✅ Subquery = Query inside another query.
+- ✅ Inner query executes before the outer query.
+- ✅ Scalar Subquery returns a single value.
+- ✅ Multiple Row Subquery returns multiple values and commonly uses `IN`, `ANY`, or `ALL`.
+- ✅ Correlated Subquery executes once per row.
+- ✅ Always identify the **comparison key** when solving group-based business problems.
