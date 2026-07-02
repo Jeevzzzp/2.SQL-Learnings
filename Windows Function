@@ -1,0 +1,582 @@
+# SQL Window Functions - Complete Learning Notes
+
+## What is a Window Function?
+
+A Window Function performs calculations across a set of rows **without reducing the number of rows**.
+
+### GROUP BY
+
+```sql
+SELECT Department, SUM(Salary)
+FROM Employee
+GROUP BY Department;
+```
+
+Output
+
+| Department | Total Salary |
+|------------|-------------:|
+| Sales | 190000 |
+| HR | 105000 |
+
+Rows are grouped into a single record.
+
+---
+
+### Window Function
+
+```sql
+SELECT
+    Employee,
+    Department,
+    Salary,
+    SUM(Salary) OVER(PARTITION BY Department) AS TotalSalary
+FROM Employee;
+```
+
+Output
+
+| Employee | Department | Salary | TotalSalary |
+|----------|------------|-------:|------------:|
+| John | Sales | 50000 | 190000 |
+| Mary | Sales | 70000 | 190000 |
+| Alex | Sales | 70000 | 190000 |
+
+Rows remain unchanged.
+
+> **Golden Rule**
+>
+> GROUP BY reduces rows.
+>
+> Window Functions keep all rows.
+
+---
+
+# General Syntax
+
+```sql
+Function() OVER(
+    PARTITION BY Column
+    ORDER BY Column
+)
+```
+
+---
+
+# Understanding OVER()
+
+The `OVER()` clause defines how SQL processes the window.
+
+It consists of two important parts:
+
+```text
+OVER(
+    PARTITION BY
+    ORDER BY
+)
+```
+
+---
+
+# PARTITION BY
+
+### Purpose
+
+Divides the data into logical groups.
+
+Example
+
+```sql
+PARTITION BY CardCode
+```
+
+Creates
+
+```text
+Customer A
+
+Invoice 1
+Invoice 2
+Invoice 3
+
+--------------------
+
+Customer B
+
+Invoice 4
+Invoice 5
+
+--------------------
+
+Customer C
+
+Invoice 6
+```
+
+The calculation restarts for every partition.
+
+---
+
+# ORDER BY
+
+### Purpose
+
+Defines the order inside each partition.
+
+Example
+
+```sql
+ORDER BY DocDate
+```
+
+or
+
+```sql
+ORDER BY DocTotal DESC
+```
+
+Examples
+
+- Highest Invoice
+- Latest Invoice
+- First Purchase
+- Invoice Sequence
+
+---
+
+# ROW_NUMBER()
+
+Assigns a unique sequence number.
+
+```sql
+ROW_NUMBER() OVER(
+    PARTITION BY CardCode
+    ORDER BY DocDate
+)
+```
+
+Example
+
+| Amount | Row Number |
+|--------:|-----------:|
+|700|1|
+|700|2|
+|500|3|
+
+Every row receives a unique number.
+
+---
+
+# RANK()
+
+Assigns the same rank for duplicate values.
+
+Next rank is skipped.
+
+```sql
+RANK() OVER(
+    PARTITION BY CardCode
+    ORDER BY DocTotal DESC
+)
+```
+
+Example
+
+| Amount | Rank |
+|--------:|-----:|
+|700|1|
+|700|1|
+|500|3|
+
+Notice Rank 2 is skipped.
+
+---
+
+# DENSE_RANK()
+
+Assigns the same rank for duplicate values.
+
+No skipped numbers.
+
+```sql
+DENSE_RANK() OVER(
+    PARTITION BY CardCode
+    ORDER BY DocTotal DESC
+)
+```
+
+Example
+
+| Amount | Dense Rank |
+|--------:|-----------:|
+|700|1|
+|700|1|
+|500|2|
+
+---
+
+# LAG()
+
+Returns the previous row value.
+
+```sql
+LAG(DocTotal) OVER(
+    PARTITION BY CardCode
+    ORDER BY DocDate
+)
+```
+
+Output
+
+| Invoice | Amount | Previous Amount |
+|---------|-------:|----------------:|
+|1001|500|NULL|
+|1002|700|500|
+|1003|600|700|
+
+Common Uses
+
+- Previous Invoice
+- Previous Purchase
+- Previous Salary
+- Month-over-Month Comparison
+
+---
+
+# LEAD()
+
+Returns the next row value.
+
+```sql
+LEAD(DocTotal) OVER(
+    PARTITION BY CardCode
+    ORDER BY DocDate
+)
+```
+
+Output
+
+| Invoice | Amount | Next Amount |
+|---------|-------:|------------:|
+|1001|500|700|
+|1002|700|600|
+|1003|600|NULL|
+
+---
+
+# Choosing the Right Function
+
+| Requirement | Function |
+|-------------|----------|
+|Unique numbering|ROW_NUMBER()|
+|Ranking with gaps|RANK()|
+|Ranking without gaps|DENSE_RANK()|
+|Previous row|LAG()|
+|Next row|LEAD()|
+
+---
+
+# Business Logic for PARTITION BY
+
+Whenever the requirement says
+
+> "For each Customer"
+
+```sql
+PARTITION BY CardCode
+```
+
+Whenever it says
+
+> "For each Department"
+
+```sql
+PARTITION BY Department
+```
+
+Whenever it says
+
+> "For each Item"
+
+```sql
+PARTITION BY ItemCode
+```
+
+**Rule**
+
+The calculation restarts for every group.
+
+---
+
+# Business Logic for ORDER BY
+
+Choose the column that defines the sequence.
+
+Examples
+
+Highest Sales
+
+```sql
+ORDER BY DocTotal DESC
+```
+
+Latest Invoice
+
+```sql
+ORDER BY DocDate DESC
+```
+
+First Invoice
+
+```sql
+ORDER BY DocDate
+```
+
+Invoice Sequence
+
+```sql
+ORDER BY DocEntry
+```
+
+---
+
+# Decision Framework
+
+Before writing any Window Function, ask yourself these three questions.
+
+## Step 1
+
+Where should the calculation restart?
+
+Answer
+
+```text
+PARTITION BY
+```
+
+---
+
+## Step 2
+
+What determines the sequence?
+
+Answer
+
+```text
+ORDER BY
+```
+
+---
+
+## Step 3
+
+Which calculation do I need?
+
+```text
+Unique Number
+↓
+
+ROW_NUMBER()
+
+-------------------
+
+Ranking with Gaps
+↓
+
+RANK()
+
+-------------------
+
+Ranking without Gaps
+↓
+
+DENSE_RANK()
+
+-------------------
+
+Previous Record
+↓
+
+LAG()
+
+-------------------
+
+Next Record
+↓
+
+LEAD()
+```
+
+---
+
+# Real SAP Business One Examples
+
+## Highest Invoice for Every Customer
+
+```sql
+ROW_NUMBER() OVER(
+    PARTITION BY CardCode
+    ORDER BY DocTotal DESC
+)
+```
+
+---
+
+## Previous Invoice Amount
+
+```sql
+LAG(DocTotal) OVER(
+    PARTITION BY CardCode
+    ORDER BY DocDate
+)
+```
+
+---
+
+## Top 3 Customers by Total Sales
+
+```sql
+RANK() OVER(
+    ORDER BY TotalSales DESC
+)
+```
+
+Notice
+
+No `PARTITION BY`.
+
+Reason
+
+Every customer is already aggregated.
+
+We are ranking **all customers together**.
+
+---
+
+# Golden Rules
+
+### Rule 1
+
+If the requirement says
+
+> "For each Customer"
+
+Use
+
+```sql
+PARTITION BY CardCode
+```
+
+---
+
+### Rule 2
+
+If the requirement says
+
+> "Rank all Customers"
+
+Do **NOT** use `PARTITION BY`.
+
+Example
+
+```sql
+RANK() OVER(
+    ORDER BY TotalSales DESC
+)
+```
+
+---
+
+### Rule 3
+
+Choose the ordering column based on the business requirement.
+
+Examples
+
+- Highest Amount → `ORDER BY Amount DESC`
+- Latest Date → `ORDER BY DocDate DESC`
+- First Invoice → `ORDER BY DocDate`
+
+---
+
+# Common Mistakes
+
+❌ Partitioning by a unique column
+
+```sql
+PARTITION BY DocEntry
+```
+
+Every partition has one row.
+
+Result
+
+Every row gets Rank = 1.
+
+---
+
+❌ Partitioning by Amount
+
+```sql
+PARTITION BY DocTotal
+```
+
+Groups are created based on Amount instead of Customer.
+
+Usually incorrect for customer analysis.
+
+---
+
+# Interview Tip
+
+Always translate the business requirement into SQL.
+
+Example
+
+```
+Highest Invoice for every Customer
+
+↓
+
+Group
+
+Customer
+
+↓
+
+Sort
+
+Highest Invoice
+
+↓
+
+Need one row
+
+↓
+
+ROW_NUMBER()
+
+↓
+
+Filter
+
+WHERE SeqNo = 1
+```
+
+Don't memorize syntax.
+
+Understand the business requirement first.
+
+---
+
+# Summary
+
+| Requirement | Solution |
+|-------------|----------|
+|Number rows|ROW_NUMBER()|
+|Competition ranking|RANK()|
+|Dense ranking|DENSE_RANK()|
+|Previous record|LAG()|
+|Next record|LEAD()|
+|Restart calculation|PARTITION BY|
+|Define sequence|ORDER BY|
