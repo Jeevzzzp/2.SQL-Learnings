@@ -1,0 +1,467 @@
+          # Module 5 — Aggregations & GROUP BY
+
+## 📌 Learning Objectives
+
+After completing this module, you should be able to:
+
+- Use aggregate functions to summarize data.
+- Group records using `GROUP BY`.
+- Understand the difference between `WHERE` and `HAVING`.
+- Generate subtotals using `ROLLUP`.
+- Generate all subtotal combinations using `CUBE`.
+- Create custom summaries using `GROUPING SETS`.
+- Build business reports using aggregation techniques.
+
+---
+
+# 1. Aggregate Functions
+
+Aggregate functions summarize multiple rows into a single value.
+
+| Function | Purpose | Example |
+|----------|---------|---------|
+| `SUM()` | Calculates total | Total Sales |
+| `COUNT()` | Counts rows | Number of Invoices |
+| `AVG()` | Calculates average | Average Invoice Value |
+| `MIN()` | Smallest value | Lowest Price |
+| `MAX()` | Largest value | Highest Invoice |
+
+### Example
+
+```sql
+SELECT
+    COUNT(*) AS "Total Invoices",
+    SUM("DocTotal") AS "Total Sales",
+    AVG("DocTotal") AS "Average Invoice",
+    MIN("DocTotal") AS "Lowest Invoice",
+    MAX("DocTotal") AS "Highest Invoice"
+FROM OINV;
+```
+
+---
+
+# 2. GROUP BY
+
+## Purpose
+
+`GROUP BY` groups rows having the same values before performing aggregate calculations.
+
+### Business Scenario
+
+**Question**
+
+> What is the total sales for each customer?
+
+### SQL
+
+```sql
+SELECT
+    "CardCode",
+    SUM("DocTotal") AS "Total Sales"
+FROM OINV
+GROUP BY "CardCode";
+```
+
+### Output
+
+| Customer | Total Sales |
+|-----------|------------:|
+| C001 | 150,000 |
+| C002 | 95,000 |
+| C003 | 210,000 |
+
+---
+
+## Multiple Column GROUP BY
+
+```sql
+SELECT
+    "CardCode",
+    YEAR("DocDate") AS "Year",
+    SUM("DocTotal") AS "Sales"
+FROM OINV
+GROUP BY
+    "CardCode",
+    YEAR("DocDate");
+```
+
+Groups data by both Customer and Year.
+
+---
+
+# 3. GROUP BY Rules
+
+Every selected column must either:
+
+- Be included in `GROUP BY`, or
+- Be inside an aggregate function.
+
+### ❌ Incorrect
+
+```sql
+SELECT
+    CardCode,
+    CardName,
+    SUM(DocTotal)
+FROM OINV
+GROUP BY CardCode;
+```
+
+### ✅ Correct
+
+```sql
+SELECT
+    CardCode,
+    CardName,
+    SUM(DocTotal)
+FROM OINV
+GROUP BY
+    CardCode,
+    CardName;
+```
+
+---
+
+# 4. WHERE vs HAVING
+
+One of the most important SQL interview questions.
+
+## WHERE
+
+Filters rows **before** grouping.
+
+### Example
+
+```sql
+SELECT
+    CardCode,
+    SUM(DocTotal)
+FROM OINV
+WHERE YEAR(DocDate)=2026
+GROUP BY CardCode;
+```
+
+---
+
+## HAVING
+
+Filters grouped results **after** aggregation.
+
+### Example
+
+```sql
+SELECT
+    CardCode,
+    SUM(DocTotal)
+FROM OINV
+GROUP BY CardCode
+HAVING SUM(DocTotal)>100000;
+```
+
+---
+
+## Comparison
+
+| WHERE | HAVING |
+|--------|---------|
+| Filters rows | Filters groups |
+| Before GROUP BY | After GROUP BY |
+| Cannot use aggregate functions | Can use aggregate functions |
+
+---
+
+# 5. SQL Execution Order
+
+SQL does **not** execute in the order it is written.
+
+```text
+FROM
+ ↓
+WHERE
+ ↓
+GROUP BY
+ ↓
+Aggregate Functions
+ ↓
+HAVING
+ ↓
+SELECT
+ ↓
+ORDER BY
+```
+
+Understanding this execution order explains why aggregate functions cannot be used inside the `WHERE` clause.
+
+---
+
+# 6. ROLLUP
+
+## Purpose
+
+Creates hierarchical subtotals and a Grand Total automatically.
+
+### Example
+
+```sql
+SELECT
+    CardCode,
+    SlpCode,
+    SUM(DocTotal)
+FROM OINV
+GROUP BY ROLLUP
+(
+    CardCode,
+    SlpCode
+);
+```
+
+### Output
+
+| Customer | Salesperson | Sales |
+|-----------|-------------|------:|
+| C001 | John | 50,000 |
+| C001 | Mike | 40,000 |
+| C001 | NULL | 90,000 *(Subtotal)* |
+| C002 | John | 70,000 |
+| C002 | NULL | 70,000 *(Subtotal)* |
+| NULL | NULL | 160,000 *(Grand Total)* |
+
+### Best Use Cases
+
+- Region → City
+- Year → Month
+- Department → Employee
+
+---
+
+# 7. CUBE
+
+## Purpose
+
+Creates every possible subtotal combination.
+
+### Example
+
+```sql
+SELECT
+    CardCode,
+    SlpCode,
+    SUM(DocTotal)
+FROM OINV
+GROUP BY CUBE
+(
+    CardCode,
+    SlpCode
+);
+```
+
+### Produces
+
+- Customer totals
+- Salesperson totals
+- Customer + Salesperson totals
+- Grand Total
+
+### Best Use Cases
+
+Cross-dimensional business analysis.
+
+---
+
+# 8. GROUPING SETS
+
+## Purpose
+
+Generates only the summaries you explicitly request.
+
+### Example
+
+```sql
+SELECT
+    CardCode,
+    SlpCode,
+    SUM(DocTotal)
+FROM OINV
+GROUP BY GROUPING SETS
+(
+    (CardCode),
+    (SlpCode)
+);
+```
+
+Produces only:
+
+- Customer totals
+- Salesperson totals
+
+No unnecessary subtotal combinations.
+
+---
+
+# 9. ROLLUP vs CUBE vs GROUPING SETS
+
+| Feature | ROLLUP | CUBE | GROUPING SETS |
+|----------|--------|------|---------------|
+| Hierarchical Subtotals | ✅ | ❌ | Custom |
+| Grand Total | ✅ | ✅ | Optional |
+| Every Combination | ❌ | ✅ | Only Selected |
+| Performance | Fast | Slowest | Efficient |
+| Best For | Hierarchical Reports | Multi-dimensional Analysis | Custom Reports |
+
+---
+
+# 10. SAP Business One Examples
+
+## Total Sales by Customer
+
+```sql
+SELECT
+    CardCode,
+    CardName,
+    SUM(DocTotal) AS "Total Sales"
+FROM OINV
+GROUP BY
+    CardCode,
+    CardName;
+```
+
+---
+
+## Vendors with Purchases Above ₹100,000
+
+```sql
+SELECT
+    CardCode,
+    SUM(DocTotal) AS "Purchase Amount"
+FROM OPCH
+GROUP BY CardCode
+HAVING SUM(DocTotal)>100000;
+```
+
+---
+
+## Sales by Salesperson with Grand Total
+
+```sql
+SELECT
+    SlpCode,
+    SUM(DocTotal)
+FROM OINV
+GROUP BY ROLLUP(SlpCode);
+```
+
+---
+
+# 11. Business Examples
+
+| Business Question | SQL Feature |
+|-------------------|------------|
+| Total Sales by Customer | GROUP BY |
+| Average Invoice Value | AVG() |
+| Customers with Sales > ₹100K | HAVING |
+| Current Year Sales | WHERE |
+| Region → City Totals | ROLLUP |
+| Customer & Salesperson Analysis | CUBE |
+| Customer Totals + Salesperson Totals Only | GROUPING SETS |
+
+---
+
+# 12. Common Mistakes
+
+### ❌ Selecting non-grouped columns
+
+```sql
+SELECT CardCode,
+       CardName,
+       SUM(DocTotal)
+FROM OINV
+GROUP BY CardCode;
+```
+
+---
+
+### ✅ Correct
+
+```sql
+GROUP BY
+CardCode,
+CardName;
+```
+
+---
+
+### ❌ Using Aggregate Functions in WHERE
+
+```sql
+WHERE SUM(DocTotal)>100000
+```
+
+---
+
+### ✅ Correct
+
+```sql
+HAVING SUM(DocTotal)>100000
+```
+
+---
+
+### ❌ Assuming GROUP BY sorts data
+
+`GROUP BY` does **not** sort results.
+
+Always use:
+
+```sql
+ORDER BY
+```
+
+when sorting is required.
+
+---
+
+# 13. Interview Questions
+
+### Q1. Why do we use GROUP BY?
+
+To group similar rows before performing aggregate calculations.
+
+---
+
+### Q2. Difference between WHERE and HAVING?
+
+- `WHERE` filters rows before grouping.
+- `HAVING` filters grouped results after aggregation.
+
+---
+
+### Q3. Why can't aggregate functions be used inside WHERE?
+
+Because `WHERE` executes before aggregation.
+
+---
+
+### Q4. Difference between ROLLUP and CUBE?
+
+- `ROLLUP` creates hierarchical subtotals.
+- `CUBE` creates every possible subtotal combination.
+
+---
+
+### Q5. When should GROUPING SETS be used?
+
+When only specific subtotal combinations are required instead of all possible combinations.
+
+---
+
+# 14. Key Takeaways
+
+- Aggregate functions summarize data.
+- `GROUP BY` groups records before aggregation.
+- `WHERE` filters rows.
+- `HAVING` filters grouped results.
+- SQL execution order is essential for writing correct queries.
+- `ROLLUP` generates hierarchical subtotals.
+- `CUBE` generates every subtotal combination.
+- `GROUPING SETS` provides complete control over summary generation.
+- Aggregations form the foundation of ERP reporting and dashboard development.
