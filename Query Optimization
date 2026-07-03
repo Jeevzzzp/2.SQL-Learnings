@@ -1,0 +1,331 @@
+# Module 6 — SQL Query Optimization
+
+> **Goal:** Learn how to write SQL queries that are not only correct but also fast and scalable for production databases.
+
+---
+
+# Why Query Optimization Matters
+
+Writing a query that returns the correct result is only half the job.
+
+A good SQL developer writes queries that:
+
+- Execute quickly
+- Consume less CPU and memory
+- Read fewer rows
+- Scale well with millions of records
+
+**Example**
+
+A report taking **5 minutes** instead of **5 seconds** can impact business productivity significantly.
+
+---
+
+# 1. Execution Plan
+
+## What is an Execution Plan?
+
+An **Execution Plan** is the roadmap the database creates to execute your SQL query.
+
+It shows:
+
+- How tables are accessed
+- Which indexes are used
+- Join methods
+- Estimated execution cost
+
+### Why is it important?
+
+Whenever a query is slow, the **Execution Plan** is the first place to investigate.
+
+---
+
+## Common Execution Plan Operators
+
+| Operator | Description | Performance |
+|----------|-------------|------------|
+| Table Scan | Reads every row in the table | ❌ Slow on large tables |
+| Index Scan | Reads many index entries | ⚠️ Moderate |
+| Index Seek | Jumps directly to matching rows | ✅ Fast |
+| Nested Loop | Efficient for small-to-large joins | ✅ Good |
+| Hash Join | Efficient for large datasets | ✅ Good |
+| Merge Join | Efficient when both datasets are sorted | ✅ Excellent |
+
+---
+
+# 2. Indexes
+
+## What is an Index?
+
+An **Index** is similar to a book's table of contents.
+
+Instead of reading every page, the database jumps directly to the required data.
+
+Without Index
+
+```
+Search every row
+```
+
+With Index
+
+```
+Jump directly to matching rows
+```
+
+---
+
+## Creating an Index
+
+```sql
+CREATE INDEX IDX_CardCode
+ON OINV(CardCode);
+```
+
+---
+
+## Composite Index
+
+```sql
+CREATE INDEX IDX_Customer_Date
+ON OINV(CardCode, DocDate);
+```
+
+Useful for queries like:
+
+```sql
+WHERE CardCode = 'C001'
+AND DocDate >= '2025-01-01'
+```
+
+---
+
+# 3. Avoid SELECT *
+
+Avoid:
+
+```sql
+SELECT *
+FROM OINV;
+```
+
+Instead:
+
+```sql
+SELECT
+    DocNum,
+    CardName,
+    DocTotal
+FROM OINV;
+```
+
+### Why?
+
+Selecting only required columns:
+
+- Reduces Disk I/O
+- Uses less Memory
+- Transfers less Network Data
+- Improves Performance
+
+---
+
+# 4. Write Index-Friendly Queries
+
+## Avoid Functions on Indexed Columns
+
+❌ Bad
+
+```sql
+WHERE YEAR(DocDate) = 2025;
+```
+
+Why?
+
+The database evaluates `YEAR()` for every row, making index usage less efficient.
+
+---
+
+✅ Good
+
+```sql
+WHERE DocDate >= '2025-01-01'
+AND DocDate < '2026-01-01';
+```
+
+This allows the optimizer to perform an **Index Seek**.
+
+---
+
+# 5. Filter Early
+
+Apply filters as early as possible.
+
+Instead of processing millions of rows and filtering later, reduce the dataset before expensive operations like joins or aggregations.
+
+---
+
+# 6. Avoid Unnecessary Sorting
+
+Only use:
+
+```sql
+ORDER BY
+```
+
+when the business requires sorted output.
+
+Sorting large datasets consumes additional CPU and memory.
+
+---
+
+# 7. Use DISTINCT Only When Needed
+
+Avoid using `DISTINCT` to hide duplicate data caused by incorrect joins.
+
+Instead:
+
+- Fix the JOIN logic.
+- Use `DISTINCT` only when duplicate removal is a business requirement.
+
+---
+
+# 8. Scan vs Seek
+
+| Table Scan | Index Seek |
+|------------|------------|
+| Reads the entire table | Reads only matching rows |
+| Slow on large tables | Very Fast |
+| High I/O | Low I/O |
+
+**Goal:** Always aim for **Index Seek** whenever possible.
+
+---
+
+# SAP Business One Example
+
+## Slow Query
+
+```sql
+SELECT *
+FROM OINV
+WHERE YEAR(DocDate)=2025;
+```
+
+Problems:
+
+- Uses `SELECT *`
+- Uses `YEAR()`
+- May cause a Table Scan
+
+---
+
+## Optimized Query
+
+```sql
+SELECT
+    DocNum,
+    CardCode,
+    CardName,
+    DocDate,
+    DocTotal
+FROM OINV
+WHERE DocDate >= '2025-01-01'
+  AND DocDate < '2026-01-01';
+```
+
+Improvements:
+
+- Selected only required columns
+- Used an index-friendly date range
+- Reduced unnecessary I/O
+- Improved execution performance
+
+---
+
+# Query Optimization Checklist
+
+- ✅ Check the Execution Plan first.
+- ✅ Prefer Index Seek over Table Scan.
+- ✅ Create indexes on frequently searched columns.
+- ✅ Avoid `SELECT *`.
+- ✅ Write index-friendly `WHERE` clauses.
+- ✅ Filter early.
+- ✅ Use efficient JOIN conditions.
+- ✅ Avoid unnecessary `DISTINCT`.
+- ✅ Avoid unnecessary `ORDER BY`.
+- ✅ Test query performance on large datasets.
+
+---
+
+# ERP Interview Questions
+
+### 1. What is an Execution Plan?
+
+The database's strategy for executing a SQL query, showing scans, seeks, joins, and estimated costs.
+
+---
+
+### 2. Why is `SELECT *` discouraged?
+
+Because it retrieves unnecessary columns, increasing I/O, memory usage, network traffic, and execution time.
+
+---
+
+### 3. What is the difference between an Index Scan and an Index Seek?
+
+- **Index Scan:** Reads many or all index entries.
+- **Index Seek:** Directly locates matching rows using the index.
+
+---
+
+### 4. Why is `WHERE YEAR(DocDate)=2025` slower?
+
+Because applying a function to the indexed column can prevent efficient index usage.
+
+Using a date range allows the optimizer to perform an Index Seek.
+
+---
+
+### 5. What should you check first when a SQL query is slow?
+
+Always check the **Execution Plan** to identify bottlenecks before rewriting the query.
+
+---
+
+# Key Takeaways
+
+- A fast query is more valuable than a complex query.
+- Always analyze the Execution Plan before optimizing.
+- Indexes improve search performance dramatically.
+- Avoid `SELECT *` in production queries.
+- Write index-friendly filters.
+- Filter rows early to reduce processing.
+- Use sorting and `DISTINCT` only when required.
+- Prefer **Index Seek** over **Table Scan**.
+- Query optimization is about reducing the amount of work the database performs.
+
+---
+
+# Assessment Result
+
+**Score:** **18/20 (90%)** 🏆
+
+### Strengths
+
+- ✅ Execution Plans
+- ✅ Index Usage
+- ✅ Index-Friendly Queries
+- ✅ Avoiding `SELECT *`
+- ✅ Query Optimization Best Practices
+
+### Areas to Remember
+
+- A **Table Scan** means the database reads every row.
+- Applying functions (e.g., `YEAR()`) on indexed columns can prevent efficient index usage.
+
+---
+
+# Final Thought
+
+> **"Writing SQL is about getting the correct result. Optimizing SQL is about getting the correct result with the least amount of work."**
