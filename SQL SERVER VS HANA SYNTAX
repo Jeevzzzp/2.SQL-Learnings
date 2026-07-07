@@ -1,0 +1,310 @@
+# Module 9 – MSSQL vs SAP HANA Specifics
+
+## 📖 Overview
+
+Although **Microsoft SQL Server (MSSQL)** and **SAP HANA** both use SQL, they have different SQL dialects, built-in functions, and syntax. Understanding these differences helps Data Analysts write portable queries and migrate SQL between database platforms with minimal changes.
+
+---
+
+# 1️⃣ SQL Dialect Differences
+
+The SQL concepts remain the same, but the syntax differs between databases.
+
+| Feature | Microsoft SQL Server | SAP HANA |
+|----------|----------------------|----------|
+| Limit Rows | `TOP` | `LIMIT` |
+| NULL Handling | `ISNULL()` | `IFNULL()` |
+| Current Date | `GETDATE()` | `CURRENT_DATE` |
+| Current Timestamp | `GETDATE()` | `CURRENT_TIMESTAMP` |
+| String Concatenation | `+` | `||` |
+| Variable Declaration | `DECLARE @Variable` | `DECLARE Variable` |
+| Column Quotes | `[Column]` | `"Column"` |
+
+---
+
+# 2️⃣ String Concatenation
+
+### Microsoft SQL Server
+
+```sql
+SELECT FirstName + ' ' + LastName
+FROM Employees;
+```
+
+### SAP HANA
+
+```sql
+SELECT FirstName || ' ' || LastName
+FROM Employees;
+```
+
+### ✅ Key Learning
+
+- SQL Server uses `+`
+- SAP HANA uses `||`
+
+---
+
+# 3️⃣ Current Date & Time Functions
+
+### Current Date
+
+```sql
+SELECT CURRENT_DATE;
+```
+
+Returns today's date.
+
+---
+
+### Current Time
+
+```sql
+SELECT CURRENT_TIME;
+```
+
+Returns only the current time.
+
+---
+
+### Current Timestamp
+
+```sql
+SELECT CURRENT_TIMESTAMP;
+```
+
+Returns both the current date and time.
+
+---
+
+# 4️⃣ NULL Handling
+
+### SQL Server
+
+```sql
+ISNULL(CustomerName, 'Unknown')
+```
+
+### SAP HANA
+
+```sql
+IFNULL(CustomerName, 'Unknown')
+```
+
+### 💡 Business Use Case
+
+Replace missing values to make reports cleaner and easier to read.
+
+---
+
+# 5️⃣ Retrieving Limited Rows
+
+### SQL Server
+
+```sql
+SELECT TOP 10 *
+FROM Sales;
+```
+
+### SAP HANA
+
+```sql
+SELECT *
+FROM Sales
+LIMIT 10;
+```
+
+### Best Practice
+
+Always use `ORDER BY` when retrieving Top/Latest/Highest records.
+
+```sql
+SELECT *
+FROM Sales
+ORDER BY TotalAmount DESC
+LIMIT 10;
+```
+
+---
+
+# 6️⃣ SAP HANA Date Functions
+
+## Add Days
+
+```sql
+ADD_DAYS(CURRENT_DATE, 30)
+```
+
+Returns the date 30 days from today.
+
+---
+
+## Add Months
+
+```sql
+ADD_MONTHS(CURRENT_DATE, 6)
+```
+
+Returns the date 6 months from today.
+
+---
+
+## Days Between
+
+```sql
+DAYS_BETWEEN(OrderDate, CURRENT_DATE)
+```
+
+### Common Use Cases
+
+- Aging Reports
+- Overdue Invoices
+- Delivery Delay Analysis
+- Customer Follow-up Reports
+
+---
+
+# 7️⃣ Extracting Date Components
+
+### Year
+
+```sql
+YEAR(OrderDate)
+```
+
+### Month
+
+```sql
+MONTH(OrderDate)
+```
+
+### Day
+
+```sql
+DAYOFMONTH(OrderDate)
+```
+
+Useful for building monthly, quarterly, and yearly reports.
+
+---
+
+# 8️⃣ Data Type Conversion
+
+### Convert Text to Date
+
+```sql
+TO_DATE('2026-07-07')
+```
+
+---
+
+### Convert Value to String
+
+```sql
+TO_NVARCHAR(CURRENT_DATE)
+```
+
+Useful while formatting report outputs.
+
+---
+
+# 9️⃣ CASE Statement
+
+Conditional logic remains the same across both databases.
+
+```sql
+SELECT
+CASE
+    WHEN TotalAmount > 10000 THEN 'High'
+    ELSE 'Low'
+END AS Category
+FROM Sales;
+```
+
+### Common Use Cases
+
+- Customer Segmentation
+- Sales Classification
+- Risk Categorization
+
+---
+
+# 🔟 Calculation Views
+
+A **Calculation View** is a reusable semantic model in SAP HANA that combines:
+
+- Multiple Tables
+- Joins
+- Filters
+- Aggregations
+- Calculated Columns
+
+Instead of writing the same complex SQL repeatedly, reports and dashboards can query the Calculation View directly.
+
+### Benefits
+
+- Reusable Business Logic
+- Better Maintainability
+- Faster Reporting
+- Reduced SQL Duplication
+- Improved Dashboard Performance
+
+---
+
+# 1️⃣1️⃣ SQL Migration (MSSQL → SAP HANA)
+
+When migrating SQL queries, common syntax changes include:
+
+| SQL Server | SAP HANA |
+|------------|----------|
+| `TOP` | `LIMIT` |
+| `ISNULL()` | `IFNULL()` |
+| `GETDATE()` | `CURRENT_DATE` |
+| `+` | `||` |
+| `[Column]` | `"Column"` |
+| `@Variable` | `DECLARE Variable` |
+
+---
+
+# 1️⃣2️⃣ Best Practices
+
+- Learn SQL concepts before memorizing database-specific syntax.
+- Always use `ORDER BY` with `LIMIT` or `TOP` when row order matters.
+- Perform calculations inside the database whenever possible.
+- Handle `NULL` values within SQL for cleaner reports.
+- Reuse business logic using Calculation Views instead of repeating complex joins.
+- Understand database-specific functions before migrating SQL between platforms.
+
+---
+
+# 🎯 Key Takeaways
+
+- SQL concepts remain the same across databases, but syntax differs.
+- `TOP` (SQL Server) is equivalent to `LIMIT` (SAP HANA).
+- `IFNULL()` replaces `ISNULL()` in SAP HANA.
+- SAP HANA provides powerful built-in date functions such as:
+  - `CURRENT_DATE`
+  - `CURRENT_TIME`
+  - `CURRENT_TIMESTAMP`
+  - `ADD_DAYS()`
+  - `ADD_MONTHS()`
+  - `DAYS_BETWEEN()`
+- Calculation Views centralize business logic and improve reporting performance.
+- Knowing database-specific syntax is essential when working with multiple database systems or migrating SQL queries.
+
+---
+
+## 🏆 Skills Gained
+
+- Cross-Database SQL Knowledge
+- MSSQL vs SAP HANA Syntax Comparison
+- HANA Date & Time Functions
+- NULL Handling Techniques
+- Data Type Conversion
+- Query Migration Concepts
+- Calculation View Fundamentals
+- Writing Portable SQL Queries
+- Best Practices for Cross-Platform SQL Development
+
+---
+**Module Status:** ✅ Completed
