@@ -1,0 +1,304 @@
+# Module 7 - Stored Procedures (SAP HANA SQLScript)
+
+## 📌 What is a Stored Procedure?
+
+A **Stored Procedure** is a named collection of SQL statements stored inside the database. It is created once and executed multiple times using the `CALL` statement.
+
+### Why use Stored Procedures?
+- Reusable business logic
+- Reduces duplicate SQL
+- Centralized maintenance
+- Better performance for repetitive tasks
+- Used by applications, dashboards, and ERP systems
+
+---
+
+# Basic Syntax
+
+```sql
+CREATE PROCEDURE Procedure_Name
+(
+    IN Parameter1 DataType,
+    OUT Parameter2 DataType
+)
+LANGUAGE SQLSCRIPT
+AS
+BEGIN
+
+    SQL Statements;
+
+END;
+```
+
+Execute the procedure:
+
+```sql
+CALL Procedure_Name(...);
+```
+
+---
+
+# Parameter Types
+
+## 1️⃣ IN Parameter
+Receives input from the user.
+
+Example:
+
+```sql
+IN CardCode NVARCHAR(20)
+```
+
+Typical Uses:
+- Customer Code
+- Date
+- Warehouse
+- Item Code
+
+---
+
+## 2️⃣ OUT Parameter
+Returns a single calculated value from the procedure.
+
+Example:
+
+```sql
+OUT TotalSales DECIMAL(18,2)
+```
+
+Usually used with:
+
+```sql
+SELECT SUM("DocTotal")
+INTO TotalSales
+FROM OINV;
+```
+
+---
+
+## 3️⃣ INOUT Parameter
+Acts as both input and output.
+
+Use only when the procedure modifies the incoming value.
+
+Example:
+
+```sql
+INOUT Salary DECIMAL(18,2)
+
+Salary := Salary + 5000;
+```
+
+---
+
+# SELECT vs SELECT INTO
+
+## Returning Multiple Rows
+
+```sql
+SELECT *
+FROM OINV;
+```
+
+Returns a result set (table).
+
+---
+
+## Returning a Single Value
+
+```sql
+SELECT SUM("DocTotal")
+INTO TotalSales
+FROM OINV;
+```
+
+Stores the result into an OUT parameter or local variable.
+
+---
+
+# Calling Stored Procedures
+
+## Without OUT Parameter
+
+```sql
+CALL GetCustomerInvoices('C20000');
+```
+
+---
+
+## With OUT Parameter
+
+```sql
+CALL GetTotalSales(2025, ?);
+```
+
+The `?` is a placeholder for the OUT parameter.
+
+---
+
+# Procedure Chaining
+
+A Stored Procedure can call another Stored Procedure.
+
+Example:
+
+```sql
+CREATE PROCEDURE SalesDashboard
+AS
+BEGIN
+
+    CALL GetSales(...);
+    CALL GetInventory(...);
+    CALL GetProfit(...);
+
+END;
+```
+
+This is known as **Procedure Chaining** and helps organize business logic into reusable modules.
+
+---
+
+# Stored Procedure vs SQL Query
+
+| SQL Query | Stored Procedure |
+|-----------|------------------|
+| One-time execution | Reusable |
+| Written repeatedly | Created once |
+| Simple reports | Business logic |
+| Mostly for analysis | Used by applications and ERP systems |
+
+---
+
+# Business Use Cases
+
+- Customer Ledger Report
+- Sales Report
+- Inventory Report
+- Finance Dashboard
+- Power BI Reports
+- SAP Business One Reports
+- Mobile Applications
+- Scheduled Reports
+
+---
+
+# Best Practices
+
+- Use **IN** for filter values.
+- Use **OUT** for returning calculated values.
+- Use **INOUT** only when modifying the input.
+- Prefer **JOINs** over subqueries when appropriate.
+- Keep procedures focused on a single business task.
+- Use meaningful procedure names.
+- Avoid writing multiple unrelated operations inside one procedure.
+
+---
+
+# About the Colon (`:`)
+
+Both of the following may work in SAP HANA:
+
+```sql
+WHERE "CardCode" = CardCode
+```
+
+Recommended approach:
+
+```sql
+WHERE "CardCode" = :CardCode
+```
+
+### Why use `:`?
+
+- Clearly identifies SQLScript variables and parameters.
+- Prevents ambiguity between variables and column names.
+- Improves readability.
+- Follows SAP HANA SQLScript best practices.
+- Makes code easier to maintain.
+
+---
+
+# Common Workflow During Development
+
+### Create Procedure
+
+```sql
+CREATE PROCEDURE ...
+```
+
+### Execute
+
+```sql
+CALL Procedure_Name(...);
+```
+
+### Modify
+
+```sql
+DROP PROCEDURE Procedure_Name;
+```
+
+Then recreate it using `CREATE PROCEDURE`.
+
+---
+
+# Key Takeaways
+
+- Stored Procedures store reusable SQL logic.
+- Execute procedures using the `CALL` statement.
+- `IN` → Receives input.
+- `OUT` → Returns a value.
+- `INOUT` → Receives input and returns the modified value.
+- `SELECT` returns a result set.
+- `SELECT INTO` stores a value into an OUT parameter or variable.
+- Stored Procedures can call other Stored Procedures (Procedure Chaining).
+- Prefer `:ParameterName` when referencing parameters inside SQLScript.
+- Stored Procedures centralize business logic and improve maintainability.
+- Widely used in ERP systems, dashboards, reporting tools, and enterprise applications.
+
+---
+
+# Interview Questions
+
+### Q1. What is a Stored Procedure?
+A reusable collection of SQL statements stored inside the database that can be executed using the `CALL` statement.
+
+### Q2. Difference between IN, OUT and INOUT?
+
+| Parameter | Purpose |
+|-----------|---------|
+| IN | Accepts input only |
+| OUT | Returns output only |
+| INOUT | Accepts input and returns the modified value |
+
+---
+
+### Q3. Difference between SELECT and SELECT INTO?
+
+| SELECT | SELECT INTO |
+|----------|-------------|
+| Returns rows | Stores a value into a variable or OUT parameter |
+
+---
+
+### Q4. Why use Stored Procedures?
+
+- Reusability
+- Centralized business logic
+- Better maintainability
+- Improved performance for repetitive operations
+- Enhanced security
+
+---
+
+### Q5. Can one Stored Procedure call another?
+
+**Yes.**
+
+This is called **Procedure Chaining** and is commonly used to build modular business logic.
+
+---
+
+## Conclusion
+
+Stored Procedures are a fundamental database programming feature that allows developers to encapsulate business logic inside the database. They improve code reusability, maintainability, performance, and consistency, making them an essential skill for SAP HANA developers, Data Analysts, and ERP professionals.
