@@ -1,0 +1,111 @@
+# 🧠 SQL Master Assessment — Results
+
+## 📊 Overall Score
+
+* **Score:** **29 / 30**
+* **Percentage:** **96.7%**
+* **Status:** ✅ **Passed with Excellent Performance**
+
+---
+
+# 📝 My Answers
+
+| Q  | My Answer |
+| -- | --------- |
+| 1  | B         |
+| 2  | C         |
+| 3  | C         |
+| 4  | A         |
+| 5  | A         |
+| 6  | C         |
+| 7  | B         |
+| 8  | B         |
+| 9  | A         |
+| 10 | False     |
+| 11 | B         |
+| 12 | B         |
+| 13 | A         |
+| 14 | A         |
+| 15 | B         |
+| 16 | B         |
+| 17 | A         |
+| 18 | B         |
+| 19 | C         |
+| 20 | B         |
+| 21 | B         |
+| 22 | A         |
+| 23 | A         |
+| 24 | A         |
+| 25 | True ❌    |
+| 26 | B         |
+| 27 | B         |
+| 28 | B         |
+| 29 | A         |
+| 30 | A         |
+
+---
+
+# ❌ Incorrect Answer
+
+### Q25. Using indexes always improves INSERT performance.
+
+**My Answer:** `True`
+
+**Correct Answer:** `False`
+
+### Explanation
+
+Indexes improve the performance of:
+
+* `SELECT`
+* `JOIN`
+* `WHERE`
+* `ORDER BY`
+
+However, every time an `INSERT`, `UPDATE`, or `DELETE` occurs, SQL must also update all associated indexes.
+
+As a result:
+
+* ✅ Faster read operations
+* ❌ Slightly slower write operations
+
+**Key Takeaway:** Create indexes only where they provide meaningful query performance improvements.
+
+---
+
+# 📈 Performance by Topic
+
+| Topic                   | Rating |
+| ----------------------- | ------ |
+| CTEs                    | ⭐⭐⭐⭐⭐  |
+| Window Functions        | ⭐⭐⭐⭐⭐  |
+| Subqueries              | ⭐⭐⭐⭐⭐  |
+| Aggregations & GROUP BY | ⭐⭐⭐⭐⭐  |
+| Query Optimization      | ⭐⭐⭐⭐☆  |
+| Business SQL Thinking   | ⭐⭐⭐⭐⭐  |
+
+---
+
+# 🎯 Skills Demonstrated
+
+* ✅ Writing modular queries using CTEs
+* ✅ Using Window Functions for rankings and running totals
+* ✅ Building Scalar and Correlated Subqueries
+* ✅ Performing business aggregations with `GROUP BY` and `HAVING`
+* ✅ Understanding SQL query optimization fundamentals
+* ✅ Applying SQL concepts to SAP Business One reporting scenarios
+
+---
+
+# 🏆 Final Result
+
+```
+Score      : 29 / 30
+Percentage : 96.7%
+Grade      : A+
+Status     : SQL Intermediate → Advanced Ready ✅
+```
+
+---
+
+> **Learning Milestone:** Successfully completed the SQL Master Assessment with **96.7% accuracy**, demonstrating strong proficiency in advanced SQL concepts and business-oriented query development for SAP Business One reporting.
