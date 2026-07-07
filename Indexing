@@ -1,0 +1,338 @@
+# Module 8 – Index Basics
+
+## 🎯 Objective
+
+Understand how indexes improve SQL query performance, when to create them, and how to maintain them efficiently.
+
+---
+
+# What is an Index?
+
+An **Index** is a separate data structure that helps the database locate rows quickly without scanning the entire table.
+
+### Without Index
+
+- SQL performs a **Table Scan (Full Scan)**.
+- Every row is checked until the required data is found.
+- Slower for large tables.
+
+```sql
+SELECT *
+FROM OCRD
+WHERE "CardCode" = 'C1001';
+```
+
+---
+
+### With Index
+
+- SQL performs an **Index Seek**.
+- Database directly jumps to the matching row.
+- Significantly faster on large datasets.
+
+---
+
+# Why Use Indexes?
+
+Indexes improve:
+
+- ✅ Query Performance
+- ✅ Read Performance
+- ✅ JOIN Performance
+- ✅ WHERE Clause Searches
+- ✅ ORDER BY & GROUP BY Operations
+
+Instead of scanning millions of rows, SQL reads only the required records.
+
+---
+
+# Clustered vs Non-Clustered Index
+
+| Clustered Index | Non-Clustered Index |
+|-----------------|---------------------|
+| Physically sorts table data | Separate index structure |
+| Only one per table | Multiple indexes allowed |
+| Leaf nodes contain actual data | Leaf nodes contain row pointers |
+| Excellent for range queries | Excellent for point lookups |
+
+---
+
+## Clustered Index Example
+
+```sql
+WHERE EmployeeID BETWEEN 1000 AND 5000
+```
+
+Since data is physically sorted, range searches are very efficient.
+
+---
+
+## Non-Clustered Index Example
+
+```sql
+SELECT *
+FROM OCRD
+WHERE "CardCode" = 'C1001';
+```
+
+Database searches the index first, then jumps to the actual row.
+
+---
+
+# When Should You Create an Index?
+
+Create indexes on columns frequently used in:
+
+## 1. WHERE Clause
+
+```sql
+WHERE CardCode = 'C1001'
+```
+
+---
+
+## 2. JOIN Conditions
+
+```sql
+JOIN OCRD B
+ON A."CardCode" = B."CardCode"
+```
+
+Index both join columns whenever appropriate.
+
+---
+
+## 3. ORDER BY
+
+```sql
+ORDER BY DocDate
+```
+
+---
+
+## 4. GROUP BY
+
+```sql
+GROUP BY CardCode
+```
+
+---
+
+## 5. Primary Keys
+
+Examples:
+
+- CardCode
+- DocEntry
+- ItemCode
+
+---
+
+## 6. Foreign Keys
+
+Frequently used in joins.
+
+---
+
+## 7. High Selectivity Columns
+
+Columns containing mostly unique values.
+
+### Good Candidates
+
+- Invoice Number
+- Customer Code
+- Employee ID
+
+### Poor Candidates
+
+- Gender
+- Status
+- Yes/No Flags
+
+Low-cardinality columns usually provide little benefit.
+
+---
+
+# When NOT to Create an Index
+
+Avoid indexing:
+
+- Small tables
+- Rarely searched columns
+- Frequently updated columns
+- Low-cardinality columns
+
+Too many indexes increase:
+
+- CPU usage
+- Storage usage
+- INSERT time
+- UPDATE time
+- DELETE time
+
+---
+
+# Index Fragmentation
+
+Over time, INSERT, UPDATE, and DELETE operations cause index pages to become fragmented.
+
+Effects:
+
+- More page reads
+- Slower query performance
+
+Maintenance options:
+
+- **Rebuild Index** → Recreates the index (high fragmentation)
+- **Reorganize Index** → Defragments existing index (moderate fragmentation)
+
+---
+
+# Statistics
+
+The SQL Query Optimizer uses statistics to decide whether to perform:
+
+- Index Seek
+- Table Scan
+
+Outdated statistics can lead to inefficient execution plans.
+
+Regularly updating statistics helps SQL choose the best query plan.
+
+---
+
+# SAP Business One Examples
+
+## Search by Customer
+
+```sql
+SELECT *
+FROM OCRD
+WHERE "CardCode" = 'C1001';
+```
+
+Recommended Index:
+
+- CardCode
+
+---
+
+## JOIN Example
+
+```sql
+SELECT
+A."DocNum",
+B."CardName"
+FROM OINV A
+JOIN OCRD B
+ON A."CardCode" = B."CardCode";
+```
+
+Recommended Indexes:
+
+- OINV.CardCode
+- OCRD.CardCode
+
+---
+
+## Range Search
+
+```sql
+SELECT *
+FROM OINV
+WHERE "DocDate"
+BETWEEN '2025-01-01'
+AND '2025-12-31';
+```
+
+Recommended Index:
+
+- DocDate (preferably clustered if suitable for the workload)
+
+---
+
+# Best Practices
+
+✅ Index Primary Keys
+
+✅ Index Foreign Keys
+
+✅ Index WHERE columns
+
+✅ Index JOIN columns
+
+✅ Index ORDER BY columns
+
+✅ Index GROUP BY columns (when appropriate)
+
+✅ Index high-selectivity columns
+
+✅ Monitor slow queries before creating indexes
+
+❌ Don't index every column
+
+❌ Avoid indexing low-cardinality columns
+
+❌ Keep unnecessary indexes
+
+---
+
+# Common Interview Questions
+
+### What is an Index?
+
+A separate data structure that allows the database to locate rows quickly without scanning the entire table.
+
+---
+
+### What is the difference between Clustered and Non-Clustered Index?
+
+Clustered indexes physically sort table data (one per table), while non-clustered indexes are separate lookup structures pointing to the data (multiple allowed).
+
+---
+
+### Why shouldn't every column be indexed?
+
+Because indexes consume storage and slow down INSERT, UPDATE, and DELETE operations due to maintenance overhead.
+
+---
+
+### What is Index Fragmentation?
+
+Fragmentation occurs when index pages become disorganized over time because of data modifications, resulting in slower query performance.
+
+---
+
+### Why are Statistics important?
+
+Statistics help the Query Optimizer choose the most efficient execution plan, such as deciding between an Index Seek and a Table Scan.
+
+---
+
+# Key Takeaways
+
+- Think of an index as the **table of contents** for your database.
+- Without an index, SQL performs a **Table Scan**.
+- With an index, SQL performs an **Index Seek**.
+- Clustered indexes sort data physically; non-clustered indexes create separate lookup structures.
+- Index columns frequently used in **WHERE**, **JOIN**, **ORDER BY**, and **GROUP BY** clauses.
+- Prefer indexing **high-selectivity** columns.
+- Avoid excessive indexes on frequently modified tables.
+- Regularly maintain indexes by addressing fragmentation and updating statistics.
+- Always analyze query patterns before adding indexes.
+
+---
+
+# Interview Cheat Sheet
+
+| Question | Answer |
+|----------|--------|
+| What is an Index? | Separate data structure for faster row retrieval. |
+| Table Scan vs Index Seek | Table Scan reads every row; Index Seek jumps directly to matching rows. |
+| Clustered Index | Physically sorts data; one per table. |
+| Non-Clustered Index | Separate lookup structure; multiple per table. |
+| Best Columns to Index | Primary Keys, Foreign Keys, WHERE, JOIN, ORDER BY, GROUP BY, High-selectivity columns. |
+| Avoid Indexing | Small tables, low-cardinality columns, frequently updated columns. |
+| Fragmentation | Disorganized index pages causing slower reads. |
+| Statistics | Help the optimizer choose the best execution plan. |
